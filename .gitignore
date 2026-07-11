@@ -1,0 +1,30 @@
+# Vendor dependencies
+/vendor/
+
+# Drupal files
+/web/sites/default/files/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Composer
+composer.phar
+
+# Node (if used later)
+node_modules/
+
+# PHPUnit
+phpunit.xml
