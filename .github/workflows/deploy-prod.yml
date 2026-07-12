@@ -1,0 +1,18 @@
+name: Deploy PROD
+
+on:
+  push:
+    branches:
+      - prod
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Trigger Render ROD Deployment
+        run: |
+          curl -X POST "${{ secrets.RRENDER_PROD_DEPLOY_HOOK }}"
