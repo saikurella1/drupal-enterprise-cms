@@ -15,4 +15,4 @@ jobs:
 
       - name: Trigger Render PROD Deployment
         run: |
-          curl -X POST "${{ secrets.RRENDER_PROD_DEPLOY_HOOK }}"
+          curl -X POST "${{ secrets.RENDER_PROD_DEPLOY_HOOK }}"
