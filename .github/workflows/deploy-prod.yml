@@ -13,6 +13,6 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Trigger Render ROD Deployment
+      - name: Trigger Render PROD Deployment
         run: |
           curl -X POST "${{ secrets.RRENDER_PROD_DEPLOY_HOOK }}"
