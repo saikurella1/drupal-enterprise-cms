@@ -1,4 +1,4 @@
-name: Deploy DEV
+name: Deploy PROD
 
 on:
   push:
@@ -13,6 +13,6 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Trigger Render DEV Deployment
+      - name: Trigger Render ROD Deployment
         run: |
-          curl -X POST "${{ secrets.RENDER_DEV_DEPLOY_HOOK }}"
+          curl -X POST "${{ secrets.RRENDER_PROD_DEPLOY_HOOK }}"
