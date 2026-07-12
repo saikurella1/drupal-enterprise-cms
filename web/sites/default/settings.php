@@ -900,5 +900,9 @@ $databases['default']['default'] = [
   'host' => getenv('DB_HOST'),
   'port' => getenv('DB_PORT'),
   'prefix' => '',
+  'pdo' => [
+    \PDO::ATTR_TIMEOUT => 30,
+    \PDO::PGSQL_ATTR_SSL_MODE => 'require',
+  ],
 ];
 $settings['config_sync_directory'] = 'sites/default/files/config_biPLRzX2X-XrVBPxNa4Fp0fJ40-14XU0wzvJOt5-hBQAM_bvVVcehYKQJ9Ec0Oj3GlaFgBJTgw/sync';
