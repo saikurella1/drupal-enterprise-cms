@@ -893,16 +893,13 @@ $settings['migrate_node_migrate_type_classic'] = FALSE;
 #   include $app_root . '/' . $site_path . '/settings.local.php';
 # }
 $databases['default']['default'] = [
-  'driver' => getenv('DB_DRIVER'),
+  'driver' => 'pgsql',
   'database' => getenv('DB_NAME'),
   'username' => getenv('DB_USER'),
   'password' => getenv('DB_PASSWORD'),
   'host' => getenv('DB_HOST'),
   'port' => getenv('DB_PORT'),
   'prefix' => '',
-  'pdo' => [
-    \PDO::ATTR_TIMEOUT => 30,
-    \PDO::PGSQL_ATTR_SSL_MODE => 'require',
-  ],
+  'namespace' => 'Drupal\\pgsql\\Driver\\Database\\pgsql',
 ];
 $settings['config_sync_directory'] = 'sites/default/files/config_biPLRzX2X-XrVBPxNa4Fp0fJ40-14XU0wzvJOt5-hBQAM_bvVVcehYKQJ9Ec0Oj3GlaFgBJTgw/sync';
