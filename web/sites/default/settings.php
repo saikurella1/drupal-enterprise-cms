@@ -892,16 +892,14 @@ $settings['migrate_node_migrate_type_classic'] = FALSE;
 # if (file_exists($app_root . '/' . $site_path . '/settings.local.php')) {
 #   include $app_root . '/' . $site_path . '/settings.local.php';
 # }
-$databases['default']['default'] = array (
-  'database' => 'drupal_local',
-  'username' => 'root',
-  'password' => '123456789',
+$databases['default']['default'] = [
+  'driver' => 'pgsql',
+  'database' => getenv('DB_NAME'),
+  'username' => getenv('DB_USER'),
+  'password' => getenv('DB_PASSWORD'),
+  'host' => getenv('DB_HOST'),
+  'port' => getenv('DB_PORT'),
   'prefix' => '',
-  'host' => 'localhost',
-  'port' => '3306',
-  'isolation_level' => 'READ COMMITTED',
-  'driver' => 'mysql',
-  'namespace' => 'Drupal\\mysql\\Driver\\Database\\mysql',
-  'autoload' => 'core/modules/mysql\\src\\Driver\\Database\\mysql\\',
-);
+  'namespace' => 'Drupal\\pgsql\\Driver\\Database\\pgsql',
+];
 $settings['config_sync_directory'] = 'sites/default/files/config_biPLRzX2X-XrVBPxNa4Fp0fJ40-14XU0wzvJOt5-hBQAM_bvVVcehYKQJ9Ec0Oj3GlaFgBJTgw/sync';
