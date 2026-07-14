@@ -48,4 +48,11 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
 
 EXPOSE 80
 
-CMD ["apache2-foreground"]
+# Copy startup script
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+
+# Make it executable
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Start using the entrypoint script
+CMD ["/usr/local/bin/docker-entrypoint.sh"]
