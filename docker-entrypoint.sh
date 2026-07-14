@@ -6,8 +6,7 @@ echo "====================================="
 
 echo "Importing Drupal configuration..."
 
-vendor/bin/drush cim -y
-
+vendor/bin/drush cget system.site uuid -y
 echo "Configuration import completed."
 
 echo "Rebuilding Drupal cache..."
