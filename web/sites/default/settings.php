@@ -922,4 +922,4 @@ else {
   ];
 
 }
-$settings['config_sync_directory'] = 'sites/default/files/config_biPLRzX2X-XrVBPxNa4Fp0fJ40-14XU0wzvJOt5-hBQAM_bvVVcehYKQJ9Ec0Oj3GlaFgBJTgw/sync';
+$settings['config_sync_directory'] = dirname(DRUPAL_ROOT) . '/config/sync';
