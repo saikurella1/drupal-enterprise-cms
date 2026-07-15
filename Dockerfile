@@ -31,10 +31,10 @@ WORKDIR /var/www/html
 
 # Copy project
 COPY . .
-RUN mkdir -p /var/www/html/web/sites/default/files \
-    && mkdir -p /var/www/html/web/sites/default/files/translations \
-    && chown -R www-data:www-data /var/www/html/web/sites/default \
-    && chmod -R 775 /var/www/html/web/sites/default
+RUN mkdir -p /var/www/html/web/sites/default/files/translations \
+    && chown -R www-data:www-data /var/www/html/web/sites/default/files \
+    && chmod -R 775 /var/www/html/web/sites/default/files \
+CMD ["apache2-foreground"]
 
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
@@ -48,11 +48,4 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
 
 EXPOSE 80
 
-# Copy startup script
-COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-
-# Make it executable
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-
-# Start using the entrypoint script
-CMD ["/usr/local/bin/docker-entrypoint.sh"]
+CMD ["apache2-foreground"]
