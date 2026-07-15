@@ -1,4 +1,4 @@
-# Drupal Enterprise CMS
+# Drupal Enterprise CMS content
 
 ## Project Overview
 
