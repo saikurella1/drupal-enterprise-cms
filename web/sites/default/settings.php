@@ -914,7 +914,7 @@ else {
     'driver' => 'mysql',
     'database' => 'drupal_local',
     'username' => 'root',
-    'password' => 'YOUR_MYSQL_PASSWORD',
+    'password' => '123456789',
     'host' => '127.0.0.1',
     'port' => '3306',
     'prefix' => '',
