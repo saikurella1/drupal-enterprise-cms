@@ -31,10 +31,10 @@ WORKDIR /var/www/html
 
 # Copy project
 COPY . .
-RUN mkdir -p /var/www/html/web/sites/default/files/translations \
-    && chown -R www-data:www-data /var/www/html/web/sites/default/files \
-    && chmod -R 775 /var/www/html/web/sites/default/files \
-CMD ["apache2-foreground"]
+RUN mkdir -p /var/www/html/web/sites/default/files \
+    && mkdir -p /var/www/html/web/sites/default/files/translations \
+    && chown -R www-data:www-data /var/www/html/web/sites/default \
+    && chmod -R 775 /var/www/html/web/sites/default
 
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
