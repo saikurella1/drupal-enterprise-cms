@@ -37,6 +37,14 @@ jobs:
       - name: Verify Terminus
         run: terminus --version
 
+      - name: Authenticate with Pantheon
+        run: |
+          terminus auth:login --machine-token="${{ secrets.PANTHEON_MACHINE_TOKEN }}"
+
+      - name: Verify Authentication
+        run: |
+          terminus auth:whoami
+
       - name: Verify Secrets
         run: |
           echo "Pantheon Site: ${{ secrets.PANTHEON_SITE_NAME }}"
