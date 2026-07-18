@@ -892,23 +892,8 @@ $settings['migrate_node_migrate_type_classic'] = FALSE;
 # if (file_exists($app_root . '/' . $site_path . '/settings.local.php')) {
 #   include $app_root . '/' . $site_path . '/settings.local.php';
 # }
-// Render / DEV / RELEASE / PROD
-if (getenv('DB_DRIVER')) {
 
-  $databases['default']['default'] = [
-    'driver' => getenv('DB_DRIVER'),
-    'database' => getenv('DB_NAME'),
-    'username' => getenv('DB_USER'),
-    'password' => getenv('DB_PASSWORD'),
-    'host' => getenv('DB_HOST'),
-    'port' => getenv('DB_PORT'),
-    'prefix' => '',
-    'namespace' => 'Drupal\\pgsql\\Driver\\Database\\pgsql',
-  ];
-
-}
-// Local XAMPP
-else {
+if (!defined('PANTHEON_ENVIRONMENT')) {
 
   $databases['default']['default'] = [
     'driver' => 'mysql',
@@ -920,6 +905,6 @@ else {
     'prefix' => '',
     'namespace' => 'Drupal\\mysql\\Driver\\Database\\mysql',
   ];
-
 }
+
 $settings['config_sync_directory'] = dirname(DRUPAL_ROOT) . '/config/sync';
