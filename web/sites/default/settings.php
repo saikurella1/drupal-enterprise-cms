@@ -892,34 +892,24 @@ $settings['migrate_node_migrate_type_classic'] = FALSE;
 # if (file_exists($app_root . '/' . $site_path . '/settings.local.php')) {
 #   include $app_root . '/' . $site_path . '/settings.local.php';
 # }
-// Render / DEV / RELEASE / PROD
-if (getenv('DB_DRIVER')) {
 
-  $databases['default']['default'] = [
-    'driver' => getenv('DB_DRIVER'),
-    'database' => getenv('DB_NAME'),
-    'username' => getenv('DB_USER'),
-    'password' => getenv('DB_PASSWORD'),
-    'host' => getenv('DB_HOST'),
-    'port' => getenv('DB_PORT'),
-    'prefix' => '',
-    'namespace' => 'Drupal\\pgsql\\Driver\\Database\\pgsql',
-  ];
+/**
+ * Load environment-specific settings.
+ */
+
+if (defined('PANTHEON_ENVIRONMENT')) {
+
+  if (file_exists($app_root . '/' . $site_path . '/settings.pantheon.php')) {
+    include $app_root . '/' . $site_path . '/settings.pantheon.php';
+  }
 
 }
-// Local XAMPP
 else {
 
-  $databases['default']['default'] = [
-    'driver' => 'mysql',
-    'database' => 'drupal_local',
-    'username' => 'root',
-    'password' => '123456789',
-    'host' => '127.0.0.1',
-    'port' => '3306',
-    'prefix' => '',
-    'namespace' => 'Drupal\\mysql\\Driver\\Database\\mysql',
-  ];
+  if (file_exists($app_root . '/' . $site_path . '/settings.local.php')) {
+    include $app_root . '/' . $site_path . '/settings.local.php';
+  }
 
 }
+
 $settings['config_sync_directory'] = dirname(DRUPAL_ROOT) . '/config/sync';
