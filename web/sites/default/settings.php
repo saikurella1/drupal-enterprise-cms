@@ -893,18 +893,23 @@ $settings['migrate_node_migrate_type_classic'] = FALSE;
 #   include $app_root . '/' . $site_path . '/settings.local.php';
 # }
 
-if (!defined('PANTHEON_ENVIRONMENT')) {
+/**
+ * Load environment-specific settings.
+ */
 
-  $databases['default']['default'] = [
-    'driver' => 'mysql',
-    'database' => 'drupal_local',
-    'username' => 'root',
-    'password' => '123456789',
-    'host' => '127.0.0.1',
-    'port' => '3306',
-    'prefix' => '',
-    'namespace' => 'Drupal\\mysql\\Driver\\Database\\mysql',
-  ];
+if (defined('PANTHEON_ENVIRONMENT')) {
+
+  if (file_exists($app_root . '/' . $site_path . '/settings.pantheon.php')) {
+    include $app_root . '/' . $site_path . '/settings.pantheon.php';
+  }
+
+}
+else {
+
+  if (file_exists($app_root . '/' . $site_path . '/settings.local.php')) {
+    include $app_root . '/' . $site_path . '/settings.local.php';
+  }
+
 }
 
 $settings['config_sync_directory'] = dirname(DRUPAL_ROOT) . '/config/sync';
