@@ -10,15 +10,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Source Code
+      - name: Checkout Source
         uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          php-version: "8.3"
           tools: composer:v2
-          extensions: mbstring, xml, curl, gd, zip
 
       - name: Validate Composer
         run: composer validate
@@ -26,7 +25,19 @@ jobs:
       - name: Install Dependencies
         run: composer install --no-interaction --prefer-dist
 
+      - name: Install Terminus
+        run: |
+          composer global require pantheon-systems/terminus
+
+      - name: Add Terminus to PATH
+        run: |
+          echo "$HOME/.composer/vendor/bin" >> $GITHUB_PATH
+          echo "$HOME/.config/composer/vendor/bin" >> $GITHUB_PATH
+
+      - name: Verify Terminus
+        run: terminus --version
+
       - name: Verify Secrets
         run: |
           echo "Pantheon Site: ${{ secrets.PANTHEON_SITE_NAME }}"
-          echo "Workflow triggered successfully."
+          echo "Machine Token exists."
