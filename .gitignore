@@ -2,6 +2,7 @@
 /vendor/
 
 # Drupal files
+/web/sites/default/files/
 
 # Environment files
 .env
