@@ -7,45 +7,28 @@ on:
 
 jobs:
   deploy:
+    permissions:
+      contents: read
+      deployments: write
+      pull-requests: read
+
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Source
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+      - uses: shivammathur/setup-php@v2
         with:
           php-version: "8.3"
           tools: composer:v2
 
-      - name: Validate Composer
-        run: composer validate
+      - run: composer validate
 
-      - name: Install Dependencies
-        run: composer install --no-interaction --prefer-dist
+      - run: composer install --no-interaction --prefer-dist
 
-      - name: Install Terminus
-        run: |
-          composer global require pantheon-systems/terminus
-
-      - name: Add Terminus to PATH
-        run: |
-          echo "$HOME/.composer/vendor/bin" >> $GITHUB_PATH
-          echo "$HOME/.config/composer/vendor/bin" >> $GITHUB_PATH
-
-      - name: Verify Terminus
-        run: terminus --version
-
-      - name: Authenticate with Pantheon
-        run: |
-          terminus auth:login --machine-token="${{ secrets.PANTHEON_MACHINE_TOKEN }}"
-
-      - name: Verify Authentication
-        run: |
-          terminus auth:whoami
-
-      - name: Verify Secrets
-        run: |
-          echo "Pantheon Site: ${{ secrets.PANTHEON_SITE_NAME }}"
-          echo "Machine Token exists."
+      - name: Push to Pantheon
+        uses: pantheon-systems/push-to-pantheon@0.9.0
+        with:
+          ssh_key: ${{ secrets.PANTHEON_SSH_KEY }}
+          machine_token: ${{ secrets.PANTHEON_MACHINE_TOKEN }}
+          site: ${{ secrets.PANTHEON_SITE_NAME }}
