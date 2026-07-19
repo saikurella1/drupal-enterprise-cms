@@ -1,0 +1,65 @@
+name: Deploy to Pantheon TEST
+
+on:
+  push:
+    branches:
+      - release
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          tools: composer:v2
+
+      - name: Validate Composer
+        run: composer validate
+
+      - name: Install Dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "github-actions@github.com"
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.PANTHEON_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -p 2222 codeserver.dev.5c64571b-09a9-48f4-b65c-1fdeb6e8600f.drush.in >> ~/.ssh/known_hosts
+
+      - name: Add Pantheon Remote
+        run: |
+          git remote add pantheon ssh://codeserver.dev.5c64571b-09a9-48f4-b65c-1fdeb6e8600f@codeserver.dev.5c64571b-09a9-48f4-b65c-1fdeb6e8600f.drush.in:2222/~/repository.git
+
+      - name: Push Code to Pantheon
+        run: |
+          git push pantheon HEAD:main
+
+      - name: Install Terminus
+        run: |
+          mkdir -p $HOME/bin
+          curl -L https://github.com/pantheon-systems/terminus/releases/latest/download/terminus.phar -o $HOME/bin/terminus
+          chmod +x $HOME/bin/terminus
+          echo "$HOME/bin" >> $GITHUB_PATH
+
+      - name: Authenticate Terminus
+        run: |
+          terminus auth:login --machine-token="${{ secrets.PANTHEON_MACHINE_TOKEN }}"
+
+      - name: Deploy to TEST
+        run: |
+          terminus env:deploy enterprise-cms-dev.test --yes
