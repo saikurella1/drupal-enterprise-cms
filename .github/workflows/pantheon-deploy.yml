@@ -53,7 +53,7 @@ jobs:
           git log --oneline --graph --decorate --all --max-count=10
           git ls-remote pantheon
 
-            - name: Push Code to Pantheon
+      - name: Push Code to Pantheon
         run: |
           git push --force-with-lease pantheon HEAD:main
 
