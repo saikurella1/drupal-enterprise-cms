@@ -72,6 +72,17 @@ jobs:
         run: |
           terminus drush enterprise-cms-dev.dev -- updatedb -y
 
+      - name: Debug settings.php
+        run: |
+          terminus drush enterprise-cms-dev.dev -- php:eval "echo file_get_contents(DRUPAL_ROOT.'/sites/default/settings.php');"
+
+      - name: Debug Pantheon settings
+        run: |
+          terminus drush enterprise-cms-dev.dev -- php:eval "
+          echo 'Pantheon settings exists: ';
+          var_dump(file_exists(DRUPAL_ROOT.'/sites/default/settings.pantheon.php'));
+          "
+
       - name: Debug Drupal Configuration
         continue-on-error: true
         run: |
