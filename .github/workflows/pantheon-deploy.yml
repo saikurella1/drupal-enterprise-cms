@@ -27,6 +27,14 @@ jobs:
       - name: Install Dependencies
         run: composer install --no-interaction --prefer-dist
 
+      - name: Verify config files
+        run: |
+          pwd
+          ls -la
+          ls -la config
+          ls -la config/sync
+          test -f config/sync/core.extension.yml && echo "core.extension.yml exists"
+
       - name: Configure Git
         run: |
           git config --global user.name "GitHub Actions"
@@ -75,6 +83,15 @@ jobs:
       - name: Run Drupal Database Updates
         run: |
           terminus drush enterprise-cms-dev.dev -- updb -y
+
+      - name: Debug Drupal Status
+        run: |
+          terminus drush enterprise-cms-dev.dev -- status
+          terminus drush enterprise-cms-dev.dev -- config:status
+
+      - name: Debug Config Directory
+        run: |
+          terminus drush enterprise-cms-dev.dev -- php:eval "echo \Drupal::service('config.storage.sync')->getCollectionName();"
 
       - name: Import Drupal Configuration
         run: |
