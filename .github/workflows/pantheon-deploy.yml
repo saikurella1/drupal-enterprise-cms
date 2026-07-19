@@ -53,6 +53,13 @@ jobs:
           git log --oneline --graph --decorate --all --max-count=10
           git ls-remote pantheon
 
+      - name: Run Drupal Updates
+        run: |
+          terminus drush enterprise-cms-dev.dev -- updb -y
+          terminus drush enterprise-cms-dev.dev -- cim -y
+          terminus drush enterprise-cms-dev.dev -- cr
+
+
       - name: Deploy to Pantheon DEV
         run: |
           git push --force-with-lease pantheon HEAD:main
