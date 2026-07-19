@@ -7,28 +7,48 @@ on:
 
 jobs:
   deploy:
-    permissions:
-      contents: read
-      deployments: write
-      pull-requests: read
-
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - uses: shivammathur/setup-php@v2
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
         with:
           php-version: "8.3"
           tools: composer:v2
 
-      - run: composer validate
+      - name: Validate Composer
+        run: composer validate
 
-      - run: composer install --no-interaction --prefer-dist
+      - name: Install Dependencies
+        run: composer install --no-interaction --prefer-dist
 
-      - name: Push to Pantheon
-        uses: pantheon-systems/push-to-pantheon@0.9.0
-        with:
-          ssh_key: ${{ secrets.PANTHEON_SSH_KEY }}
-          machine_token: ${{ secrets.PANTHEON_MACHINE_TOKEN }}
-          site: ${{ secrets.PANTHEON_SITE_NAME }}
+      - name: Configure Git
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "github-actions@github.com"
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.PANTHEON_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -p 2222 codeserver.dev.5c64571b-09a9-48f4-b65c-1fdeb6e8600f.drush.in >> ~/.ssh/known_hosts
+
+      - name: Add Pantheon Remote
+        run: |
+          git remote add pantheon ssh://codeserver.dev.5c64571b-09a9-48f4-b65c-1fdeb6e8600f@codeserver.dev.5c64571b-09a9-48f4-b65c-1fdeb6e8600f.drush.in:2222/~/repository.git
+
+      - name: Verify Pantheon Remote
+        run: |
+          git ls-remote pantheon
+
+      - name: Deploy to Pantheon DEV
+        run: |
+          git push pantheon HEAD:main
