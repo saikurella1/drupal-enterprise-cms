@@ -68,12 +68,12 @@ jobs:
         run: |
           terminus auth:login --machine-token="${{ secrets.PANTHEON_MACHINE_TOKEN }}"
 
+      - name: Deploy to LIVE
+        run: |
+          terminus env:deploy enterprise-cms-dev.live --yes
+
       - name: Run Drupal Updates
         run: |
           terminus drush enterprise-cms-dev.live -- updb -y
           terminus drush enterprise-cms-dev.live -- cim -y
           terminus drush enterprise-cms-dev.live -- cr
-
-      - name: Deploy to LIVE
-        run: |
-          terminus env:deploy enterprise-cms-dev.live --yes
