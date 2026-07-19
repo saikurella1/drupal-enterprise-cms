@@ -31,9 +31,7 @@ jobs:
         run: |
           pwd
           ls -la
-          echo "========== CONFIG =========="
           ls -la config
-          echo "========== CONFIG/SYNC =========="
           ls -la config/sync | head -20
 
       - name: Configure Git
@@ -55,13 +53,6 @@ jobs:
           git remote add pantheon ssh://codeserver.dev.5c64571b-09a9-48f4-b65c-1fdeb6e8600f@codeserver.dev.5c64571b-09a9-48f4-b65c-1fdeb6e8600f.drush.in:2222/~/repository.git
           git fetch pantheon
 
-      - name: Verify Pantheon Remote
-        run: |
-          git remote -v
-          git branch -a
-          git log --oneline --graph --decorate --all --max-count=10
-          git ls-remote pantheon
-
       - name: Push Code to Pantheon
         run: |
           git push --force-with-lease pantheon HEAD:main
@@ -81,19 +72,13 @@ jobs:
         run: |
           terminus drush enterprise-cms-dev.dev -- updatedb -y
 
-      - name: Debug Config Sync Directory
+      - name: Debug Drupal Configuration
+        continue-on-error: true
         run: |
-          terminus drush enterprise-cms-dev.dev -- php:eval "
-          echo 'Config Sync Directory: ';
-          var_dump(\Drupal::service('settings')->get('config_sync_directory'));
-          echo PHP_EOL;
-          echo 'Directory Exists: ';
-          var_dump(is_dir(\Drupal::service('settings')->get('config_sync_directory')));
-          echo PHP_EOL;
-          echo 'YAML Files Count: ';
-          \$files = glob(\Drupal::service('settings')->get('config_sync_directory').'/*.yml');
-          var_dump(count(\$files));
-          "
+          terminus drush enterprise-cms-dev.dev -- status
+          terminus drush enterprise-cms-dev.dev -- php:eval "var_dump(\Drupal::service('settings')->get('config_sync_directory'));"
+          terminus drush enterprise-cms-dev.dev -- php:eval "var_dump(is_dir(\Drupal::service('settings')->get('config_sync_directory')));"
+          terminus drush enterprise-cms-dev.dev -- php:eval "\$dir=\Drupal::service('settings')->get('config_sync_directory'); \$files=glob(\$dir.'/*.yml'); var_dump(count(\$files));"
 
       - name: Import Drupal Configuration
         run: |
