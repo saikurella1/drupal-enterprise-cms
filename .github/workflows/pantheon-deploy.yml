@@ -68,13 +68,12 @@ jobs:
         run: |
           terminus auth:login --machine-token="${{ secrets.PANTHEON_MACHINE_TOKEN }}"
 
+      - name: Deploy to Pantheon DEV
+        run: |
+          git push --force-with-lease pantheon HEAD:main
+
       - name: Run Drupal Updates
         run: |
           terminus drush enterprise-cms-dev.dev -- updb -y
           terminus drush enterprise-cms-dev.dev -- cim -y
           terminus drush enterprise-cms-dev.dev -- cr
-
-
-      - name: Deploy to Pantheon DEV
-        run: |
-          git push --force-with-lease pantheon HEAD:main
