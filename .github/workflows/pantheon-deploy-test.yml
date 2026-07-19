@@ -46,13 +46,6 @@ jobs:
           git remote add pantheon ssh://codeserver.dev.5c64571b-09a9-48f4-b65c-1fdeb6e8600f@codeserver.dev.5c64571b-09a9-48f4-b65c-1fdeb6e8600f.drush.in:2222/~/repository.git
           git fetch pantheon
 
-      - name: Verify Pantheon Remote
-        run: |
-          git remote -v
-          git branch -a
-          git log --oneline --graph --decorate --all --max-count=10
-          git ls-remote pantheon
-
       - name: Push Code to Pantheon
         run: |
           git push --force-with-lease pantheon HEAD:main
@@ -74,12 +67,12 @@ jobs:
 
       - name: Run Database Updates
         run: |
-          terminus drush enterprise-cms-dev.test -- updb -y
+          terminus drush enterprise-cms-dev.test -- updatedb -y
 
       - name: Import Drupal Configuration
         run: |
-          terminus drush enterprise-cms-dev.test -- cim -y
+          terminus drush enterprise-cms-dev.test -- config:import -y
 
       - name: Rebuild Drupal Cache
         run: |
-          terminus drush enterprise-cms-dev.test -- cr
+          terminus drush enterprise-cms-dev.test -- cache:rebuild
