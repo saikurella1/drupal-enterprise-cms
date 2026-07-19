@@ -1,0 +1,29 @@
+uuid: ccee2899-dd0c-42dc-9071-21ac0f8dbfde
+langcode: en-gb
+status: true
+dependencies:
+  config:
+    - field.field.node.demo.body
+    - node.type.demo
+  module:
+    - text
+    - user
+id: node.demo.default
+targetEntityType: node
+bundle: demo
+mode: default
+content:
+  body:
+    type: text_default
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 101
+    region: content
+  links:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 100
+    region: content
+hidden:
+  langcode: true
