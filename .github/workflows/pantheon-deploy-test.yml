@@ -72,8 +72,14 @@ jobs:
         run: |
           terminus env:deploy enterprise-cms-dev.test --yes
 
-      - name: Run Drupal Updates
+      - name: Run Database Updates
         run: |
           terminus drush enterprise-cms-dev.test -- updb -y
+
+      - name: Import Drupal Configuration
+        run: |
           terminus drush enterprise-cms-dev.test -- cim -y
+
+      - name: Rebuild Drupal Cache
+        run: |
           terminus drush enterprise-cms-dev.test -- cr

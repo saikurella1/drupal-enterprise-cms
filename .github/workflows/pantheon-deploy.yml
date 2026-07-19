@@ -68,12 +68,18 @@ jobs:
         run: |
           terminus auth:login --machine-token="${{ secrets.PANTHEON_MACHINE_TOKEN }}"
 
-      - name: Deploy to Pantheon DEV
+      - name: Deploy Active Code to DEV
         run: |
-          git push --force-with-lease pantheon HEAD:main
+          terminus env:deploy enterprise-cms-dev.dev --yes
 
-      - name: Run Drupal Updates
+      - name: Run Drupal Database Updates
         run: |
           terminus drush enterprise-cms-dev.dev -- updb -y
+
+      - name: Import Drupal Configuration
+        run: |
           terminus drush enterprise-cms-dev.dev -- cim -y
+
+      - name: Rebuild Drupal Cache
+        run: |
           terminus drush enterprise-cms-dev.dev -- cr
