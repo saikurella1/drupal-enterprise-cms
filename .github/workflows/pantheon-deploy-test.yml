@@ -1,9 +1,9 @@
-name: Deploy to Pantheon DEV
+name: Deploy to Pantheon TEST
 
 on:
   push:
     branches:
-      - dev
+      - release
 
 jobs:
   deploy:
@@ -53,6 +53,21 @@ jobs:
           git log --oneline --graph --decorate --all --max-count=10
           git ls-remote pantheon
 
-      - name: Deploy to Pantheon DEV
+      - name: Push Code to Pantheon
         run: |
           git push --force-with-lease pantheon HEAD:main
+
+      - name: Install Terminus
+        run: |
+          mkdir -p $HOME/bin
+          curl -L https://github.com/pantheon-systems/terminus/releases/latest/download/terminus.phar -o $HOME/bin/terminus
+          chmod +x $HOME/bin/terminus
+          echo "$HOME/bin" >> $GITHUB_PATH
+
+      - name: Authenticate Terminus
+        run: |
+          terminus auth:login --machine-token="${{ secrets.PANTHEON_MACHINE_TOKEN }}"
+
+      - name: Deploy to TEST
+        run: |
+          terminus env:deploy enterprise-cms-dev.test --yes
