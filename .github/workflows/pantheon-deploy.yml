@@ -53,6 +53,21 @@ jobs:
           git log --oneline --graph --decorate --all --max-count=10
           git ls-remote pantheon
 
+            - name: Push Code to Pantheon
+        run: |
+          git push --force-with-lease pantheon HEAD:main
+
+      - name: Install Terminus
+        run: |
+          mkdir -p $HOME/bin
+          curl -L https://github.com/pantheon-systems/terminus/releases/latest/download/terminus.phar -o $HOME/bin/terminus
+          chmod +x $HOME/bin/terminus
+          echo "$HOME/bin" >> $GITHUB_PATH
+
+      - name: Authenticate Terminus
+        run: |
+          terminus auth:login --machine-token="${{ secrets.PANTHEON_MACHINE_TOKEN }}"
+
       - name: Run Drupal Updates
         run: |
           terminus drush enterprise-cms-dev.dev -- updb -y
