@@ -27,13 +27,14 @@ jobs:
       - name: Install Dependencies
         run: composer install --no-interaction --prefer-dist
 
-      - name: Verify config files
+      - name: Verify Repository Structure
         run: |
           pwd
           ls -la
+          echo "========== CONFIG =========="
           ls -la config
-          ls -la config/sync
-          test -f config/sync/core.extension.yml && echo "core.extension.yml exists"
+          echo "========== CONFIG/SYNC =========="
+          ls -la config/sync | head -20
 
       - name: Configure Git
         run: |
@@ -76,27 +77,28 @@ jobs:
         run: |
           terminus auth:login --machine-token="${{ secrets.PANTHEON_MACHINE_TOKEN }}"
 
-      - name: Deploy Active Code to DEV
+      - name: Run Database Updates
         run: |
-          terminus env:deploy enterprise-cms-dev.dev --yes
+          terminus drush enterprise-cms-dev.dev -- updatedb -y
 
-      - name: Run Drupal Database Updates
+      - name: Debug Config Sync Directory
         run: |
-          terminus drush enterprise-cms-dev.dev -- updb -y
-
-      - name: Debug Drupal Status
-        run: |
-          terminus drush enterprise-cms-dev.dev -- status
-          terminus drush enterprise-cms-dev.dev -- config:status
-
-      - name: Debug Config Directory
-        run: |
-          terminus drush enterprise-cms-dev.dev -- php:eval "echo \Drupal::service('config.storage.sync')->getCollectionName();"
+          terminus drush enterprise-cms-dev.dev -- php:eval "
+          echo 'Config Sync Directory: ';
+          var_dump(\Drupal::service('settings')->get('config_sync_directory'));
+          echo PHP_EOL;
+          echo 'Directory Exists: ';
+          var_dump(is_dir(\Drupal::service('settings')->get('config_sync_directory')));
+          echo PHP_EOL;
+          echo 'YAML Files Count: ';
+          \$files = glob(\Drupal::service('settings')->get('config_sync_directory').'/*.yml');
+          var_dump(count(\$files));
+          "
 
       - name: Import Drupal Configuration
         run: |
-          terminus drush enterprise-cms-dev.dev -- cim -y
+          terminus drush enterprise-cms-dev.dev -- config:import -y
 
       - name: Rebuild Drupal Cache
         run: |
-          terminus drush enterprise-cms-dev.dev -- cr
+          terminus drush enterprise-cms-dev.dev -- cache:rebuild
