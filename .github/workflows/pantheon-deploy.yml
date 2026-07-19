@@ -51,4 +51,4 @@ jobs:
 
       - name: Deploy to Pantheon DEV
         run: |
-          git push pantheon HEAD:main
+          git push --force-with-lease pantheon HEAD:main
