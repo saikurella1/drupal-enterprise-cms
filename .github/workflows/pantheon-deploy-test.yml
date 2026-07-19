@@ -68,6 +68,13 @@ jobs:
         run: |
           terminus auth:login --machine-token="${{ secrets.PANTHEON_MACHINE_TOKEN }}"
 
+      - name: Run Drupal Updates
+        run: |
+          terminus drush enterprise-cms-dev.test -- updb -y
+          terminus drush enterprise-cms-dev.test -- cim -y
+          terminus drush enterprise-cms-dev.test -- cr
+
+
       - name: Deploy to TEST
         run: |
           terminus env:deploy enterprise-cms-dev.test --yes
