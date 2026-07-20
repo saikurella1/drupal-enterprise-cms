@@ -63,6 +63,14 @@ jobs:
         run: |
           git push --force-with-lease pantheon HEAD:main
 
+      - name: Verify Git Files on Pantheon
+        run: |
+          terminus drush enterprise-cms-dev.dev -- php:eval "
+            echo shell_exec('git -C /code status');
+            echo PHP_EOL;
+            echo shell_exec('git -C /code ls-tree -r HEAD --name-only | grep ^config/ | head -20');
+          "
+
       - name: Show Commit
         run: |
           git rev-parse HEAD
@@ -78,6 +86,14 @@ jobs:
       - name: Authenticate Terminus
         run: |
           terminus auth:login --machine-token="${{ secrets.PANTHEON_MACHINE_TOKEN }}"
+
+      - name: Verify Git Files on Pantheon
+        run: |
+          terminus drush enterprise-cms-dev.dev -- php:eval "
+            echo shell_exec('git -C /code status');
+            echo PHP_EOL;
+            echo shell_exec('git -C /code ls-tree -r HEAD --name-only | grep ^config/ | head -20');
+          "
 
       - name: Verify Git Repository on Pantheon
         run: |
