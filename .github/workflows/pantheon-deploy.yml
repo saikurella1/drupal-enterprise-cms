@@ -83,6 +83,35 @@ jobs:
         run: |
           terminus auth:login --machine-token="${{ secrets.PANTHEON_MACHINE_TOKEN }}"
 
+      - name: Check Config Files In Pantheon Branches
+        run: |
+          rm -rf pantheon-check
+
+          git clone \
+            ssh://codeserver.dev.5c64571b-09a9-48f4-b65c-1fdeb6e8600f@codeserver.dev.5c64571b-09a9-48f4-b65c-1fdeb6e8600f.drush.in:2222/~/repository.git pantheon-check
+
+          cd pantheon-check
+
+          echo "=== MAIN ==="
+          git checkout main
+          ls config | head -20
+
+          echo "=== MASTER ==="
+          git checkout master
+          ls config | head -20
+
+      - name: Show Pantheon Main Commit
+        run: |
+          git ls-remote pantheon refs/heads/main
+
+      - name: Show Pantheon Master Commit
+        run: |
+          git ls-remote pantheon refs/heads/master
+
+      - name: Show Current Commit
+        run: |
+          git rev-parse HEAD
+
       - name: Verify Git Files on Pantheon
         run: |
           terminus drush enterprise-cms-dev.dev -- php:eval "
