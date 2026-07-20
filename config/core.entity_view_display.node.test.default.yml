@@ -1,24 +1,22 @@
-uuid: c7563e77-7026-4c5c-9f72-e2f7f600c02c
+uuid: 84c02071-e184-4cba-a07a-989a09d12d89
 langcode: en-gb
 status: true
 dependencies:
   config:
-    - core.entity_view_mode.node.teaser
-    - field.field.node.demo.body
-    - node.type.demo
+    - field.field.node.test.body
+    - node.type.test
   module:
     - text
     - user
-id: node.demo.teaser
+id: node.test.default
 targetEntityType: node
-bundle: demo
-mode: teaser
+bundle: test
+mode: default
 content:
   body:
-    type: text_summary_or_trimmed
+    type: text_default
     label: hidden
-    settings:
-      trim_length: 600
+    settings: {  }
     third_party_settings: {  }
     weight: 101
     region: content
