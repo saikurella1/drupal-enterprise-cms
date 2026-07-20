@@ -63,6 +63,11 @@ jobs:
         run: |
           git push --force-with-lease pantheon HEAD:main
 
+      - name: Show Commit
+        run: |
+          git rev-parse HEAD
+          git ls-tree -r HEAD --name-only | grep '^config/' | head -20
+
       - name: Verify Git Repository on Pantheon
         run: |
           terminus connection:info enterprise-cms-dev.dev
