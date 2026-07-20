@@ -59,6 +59,10 @@ jobs:
           git remote add pantheon ssh://codeserver.dev.5c64571b-09a9-48f4-b65c-1fdeb6e8600f@codeserver.dev.5c64571b-09a9-48f4-b65c-1fdeb6e8600f.drush.in:2222/~/repository.git
           git fetch pantheon
 
+      - name: Show Pantheon Branches
+        run: |
+          git ls-remote --heads pantheon
+
       - name: Push Code to Pantheon
         run: |
           git push --force-with-lease pantheon HEAD:main
