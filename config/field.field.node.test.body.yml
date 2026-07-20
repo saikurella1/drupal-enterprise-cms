@@ -1,16 +1,16 @@
-uuid: e177253e-3da1-44fd-ba69-169883ebe0ad
+uuid: 196513cd-cf61-419e-a56b-653d27ee85e0
 langcode: en-gb
 status: true
 dependencies:
   config:
     - field.storage.node.body
-    - node.type.demo
+    - node.type.test
   module:
     - text
-id: node.demo.body
+id: node.test.body
 field_name: body
 entity_type: node
-bundle: demo
+bundle: test
 label: Body
 description: ''
 required: false

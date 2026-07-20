@@ -1,16 +1,16 @@
-uuid: 7194e488-4f8f-40cd-adc2-4d2fb0cd401e
+uuid: 6f1425f4-91b8-4405-876b-b16375089fb6
 langcode: en-gb
 status: true
 dependencies:
   config:
-    - field.field.node.demo.body
-    - node.type.demo
+    - field.field.node.test.body
+    - node.type.test
   module:
     - path
     - text
-id: node.demo.default
+id: node.test.default
 targetEntityType: node
-bundle: demo
+bundle: test
 mode: default
 content:
   body:
