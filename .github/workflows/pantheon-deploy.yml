@@ -65,7 +65,7 @@ jobs:
 
       - name: Push Code to Pantheon
         run: |
-          git push --force-with-lease pantheon HEAD:main
+          git push --force-with-lease pantheon HEAD:master
 
       - name: Show Commit
         run: |
