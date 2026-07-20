@@ -68,6 +68,17 @@ jobs:
           git rev-parse HEAD
           git ls-tree -r HEAD --name-only | grep '^config/' | head -20
 
+      - name: Install Terminus
+        run: |
+          mkdir -p $HOME/bin
+          curl -L https://github.com/pantheon-systems/terminus/releases/latest/download/terminus.phar -o $HOME/bin/terminus
+          chmod +x $HOME/bin/terminus
+          echo "$HOME/bin" >> $GITHUB_PATH
+
+      - name: Authenticate Terminus
+        run: |
+          terminus auth:login --machine-token="${{ secrets.PANTHEON_MACHINE_TOKEN }}"
+
       - name: Verify Git Repository on Pantheon
         run: |
           terminus connection:info enterprise-cms-dev.dev
@@ -80,17 +91,6 @@ jobs:
             echo 'Contents of /code/config:' . PHP_EOL;
             print_r(scandir('/code/config'));
           "
-
-      - name: Install Terminus
-        run: |
-          mkdir -p $HOME/bin
-          curl -L https://github.com/pantheon-systems/terminus/releases/latest/download/terminus.phar -o $HOME/bin/terminus
-          chmod +x $HOME/bin/terminus
-          echo "$HOME/bin" >> $GITHUB_PATH
-
-      - name: Authenticate Terminus
-        run: |
-          terminus auth:login --machine-token="${{ secrets.PANTHEON_MACHINE_TOKEN }}"
 
       - name: Verify Config Directory on Pantheon
         run: |
