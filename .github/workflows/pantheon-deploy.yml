@@ -181,6 +181,16 @@ jobs:
             passthru('git -C /code branch -a');
           "
 
+      - name: Compare main and master
+        run: |
+          cd pantheon-check
+
+          echo "=== Files changed between main and master ==="
+          git diff --stat master..main
+
+          echo "=== Config differences ==="
+          git diff --name-status master..main -- config
+
       - name: Run Database Updates
         run: |
           terminus drush enterprise-cms-dev.dev -- updatedb -y
