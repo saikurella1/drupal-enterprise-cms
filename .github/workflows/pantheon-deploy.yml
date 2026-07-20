@@ -173,6 +173,14 @@ jobs:
             var_dump(count(\$files));
           "
 
+      - name: Check Active Git Commit
+        run: |
+          terminus drush enterprise-cms-dev.dev -- php:eval "
+            echo 'HEAD: ' . trim(shell_exec('git -C /code rev-parse HEAD')) . PHP_EOL;
+            echo 'Branch:' . PHP_EOL;
+            passthru('git -C /code branch -a');
+          "
+
       - name: Run Database Updates
         run: |
           terminus drush enterprise-cms-dev.dev -- updatedb -y
