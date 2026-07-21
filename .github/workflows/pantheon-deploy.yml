@@ -67,6 +67,26 @@ jobs:
         run: |
           git push --force-with-lease pantheon HEAD:master
 
+      - name: Wait for Pantheon Build
+        run: |
+          echo "Waiting 3 minutes for Pantheon Integrated Composer build..."
+          sleep 180
+
+      - name: Verify Running Commit
+        run: |
+          terminus drush enterprise-cms-dev.dev -- php:eval "
+            echo 'Running Commit: ' . trim(shell_exec('git -C /code rev-parse HEAD')) . PHP_EOL;
+          "
+
+      - name: Verify Config Directory
+        run: |
+          terminus drush enterprise-cms-dev.dev -- php:eval "
+            echo 'Config exists: ';
+            echo file_exists('/code/config/core.extension.yml') ? 'YES' : 'NO';
+            echo PHP_EOL;
+            print_r(scandir('/code/config'));
+          "
+
       - name: Show Commit
         run: |
           git rev-parse HEAD
