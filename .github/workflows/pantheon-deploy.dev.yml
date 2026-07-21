@@ -69,15 +69,3 @@ jobs:
 
       - name: Wait for Pantheon Build
         run: sleep 120
-
-      - name: Run Database Updates
-        run: |
-          terminus drush ${PANTHEON_SITE_NAME}.dev -- status -vvv
-
-      - name: Import Configuration
-        run: |
-          terminus drush ${PANTHEON_SITE_NAME}.dev -- config:import -y
-
-      - name: Rebuild Cache
-        run: |
-          terminus drush ${PANTHEON_SITE_NAME}.dev -- cache:rebuild -y
