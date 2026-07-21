@@ -65,16 +65,29 @@ jobs:
 
       - name: Push Code to Pantheon
         run: |
+          echo "===== LOCAL HEAD ====="
+          git rev-parse HEAD
+
+          echo ""
+          echo "===== LOCAL BRANCH ====="
+          git branch --show-current
+
+          echo ""
+          echo "===== PUSH ====="
           git push --force-with-lease pantheon HEAD:master
+
+          echo ""
+          echo "===== PANTHEON MASTER ====="
+          git ls-remote pantheon refs/heads/master
+
+          echo ""
+          echo "===== PANTHEON MAIN ====="
+          git ls-remote pantheon refs/heads/main
 
       - name: Show Commit
         run: |
           git rev-parse HEAD
           git ls-tree -r HEAD --name-only | grep '^config/' | head -20
-
-      - name: Push Code to Pantheon
-        run: |
-          git push --force-with-lease pantheon HEAD:master
 
       - name: Install Terminus
         run: |
