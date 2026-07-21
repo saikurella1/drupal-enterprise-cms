@@ -191,6 +191,17 @@ jobs:
           echo "=== Config differences ==="
           git diff --name-status master..main -- config
 
+      - name: Verify Pantheon Deployment
+        run: |
+          terminus drush enterprise-cms-dev.dev -- php:eval "
+            echo 'Commit: ' . trim(shell_exec('git -C /code rev-parse HEAD')) . PHP_EOL;
+            echo 'Config exists: ';
+            echo file_exists('/code/config/core.extension.yml') ? 'YES' : 'NO';
+            echo PHP_EOL;
+            echo 'Config directory:' . PHP_EOL;
+            print_r(scandir('/code/config'));
+          "
+
       - name: Run Database Updates
         run: |
           terminus drush enterprise-cms-dev.dev -- updatedb -y
