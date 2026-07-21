@@ -133,6 +133,10 @@ jobs:
             print_r(scandir('/code/config'));
           "
 
+      - name: Verify Pantheon Git Repository
+        run: |
+          git ls-remote pantheon
+
       - name: Verify Config Directory on Pantheon
         run: |
           terminus drush enterprise-cms-dev.dev -- php:eval "
