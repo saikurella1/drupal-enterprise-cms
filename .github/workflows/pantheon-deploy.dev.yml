@@ -54,7 +54,7 @@ jobs:
       - name: Push to Pantheon
         run: |
           git fetch pantheon
-          git push --force-with-lease pantheon HEAD:main
+          git push --force pantheon HEAD:main
 
       - name: Install Terminus
         run: |
