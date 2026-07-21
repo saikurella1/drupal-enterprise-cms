@@ -101,6 +101,16 @@ jobs:
           echo "===== PANTHEON MAIN ====="
           git ls-remote pantheon refs/heads/main
 
+      - name: Check runtime filesystem
+        run: |
+          terminus connection:info enterprise-cms-dev.dev
+
+          terminus remote:drush enterprise-cms-dev.dev -- status || true
+
+          terminus remote:drush enterprise-cms-dev.dev -- php:eval "echo getcwd();" || true
+
+          terminus remote:drush enterprise-cms-dev.dev -- php:eval "echo file_exists('/code/vendor/autoload.php') ? 'vendor exists' : 'vendor missing';" || true
+
       - name: Show Commit
         run: |
           git rev-parse HEAD
