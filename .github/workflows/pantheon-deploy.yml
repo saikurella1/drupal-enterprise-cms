@@ -91,7 +91,7 @@ jobs:
 
           echo ""
           echo "===== PUSH ====="
-          git push --force-with-lease pantheon HEAD:master
+          git push --force-with-lease pantheon HEAD:main
 
           echo ""
           echo "===== PANTHEON MASTER ====="
@@ -100,16 +100,6 @@ jobs:
           echo ""
           echo "===== PANTHEON MAIN ====="
           git ls-remote pantheon refs/heads/main
-
-      - name: Check runtime filesystem
-        run: |
-          terminus connection:info enterprise-cms-dev.dev
-
-          terminus remote:drush enterprise-cms-dev.dev -- status || true
-
-          terminus remote:drush enterprise-cms-dev.dev -- php:eval "echo getcwd();" || true
-
-          terminus remote:drush enterprise-cms-dev.dev -- php:eval "echo file_exists('/code/vendor/autoload.php') ? 'vendor exists' : 'vendor missing';" || true
 
       - name: Show Commit
         run: |
@@ -126,6 +116,16 @@ jobs:
       - name: Authenticate Terminus
         run: |
           terminus auth:login --machine-token="${{ secrets.PANTHEON_MACHINE_TOKEN }}"
+
+      - name: Check runtime filesystem
+        run: |
+          terminus connection:info enterprise-cms-dev.dev
+
+          terminus remote:drush enterprise-cms-dev.dev -- status || true
+
+          terminus remote:drush enterprise-cms-dev.dev -- php:eval "echo getcwd();" || true
+
+          terminus remote:drush enterprise-cms-dev.dev -- php:eval "echo file_exists('/code/vendor/autoload.php') ? 'vendor exists' : 'vendor missing';" || true
 
       - name: Wait for Pantheon Build
         run: |
