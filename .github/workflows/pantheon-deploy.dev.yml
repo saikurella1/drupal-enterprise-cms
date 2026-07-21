@@ -1,0 +1,82 @@
+name: Deploy Drupal to Pantheon
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      PANTHEON_SITE_ID: ${{ secrets.PANTHEON_SITE_ID }}
+      PANTHEON_SITE_NAME: enterprise-drupal-cms
+      COMPOSER_PROCESS_TIMEOUT: 0
+      COMPOSER_NO_INTERACTION: 1
+      COMPOSER_NO_AUDIT: 1
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          tools: composer:v2
+
+      - name: Install Composer Dependencies
+        run: composer install --no-dev --prefer-dist --optimize-autoloader
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "github-actions@github.com"
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.PANTHEON_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+          ssh-keyscan -p 2222 codeserver.dev.${PANTHEON_SITE_ID}.drush.in >> ~/.ssh/known_hosts
+
+      - name: Add Pantheon Remote
+        run: |
+          git remote remove pantheon || true
+          git remote add pantheon ssh://codeserver.dev.${PANTHEON_SITE_ID}@codeserver.dev.${PANTHEON_SITE_ID}.drush.in:2222/~/repository.git
+
+      - name: Push to Pantheon
+        run: |
+          git push --force-with-lease pantheon HEAD:main
+
+      - name: Install Terminus
+        run: |
+          mkdir -p "$HOME/bin"
+          curl -L https://github.com/pantheon-systems/terminus/releases/latest/download/terminus.phar -o "$HOME/bin/terminus"
+          chmod +x "$HOME/bin/terminus"
+          echo "$HOME/bin" >> $GITHUB_PATH
+
+      - name: Authenticate Terminus
+        run: |
+          terminus auth:login --machine-token="${{ secrets.PANTHEON_MACHINE_TOKEN }}"
+
+      - name: Wait for Pantheon Build
+        run: sleep 120
+
+      - name: Run Database Updates
+        run: |
+          terminus drush ${PANTHEON_SITE_NAME}.dev -- updatedb -y
+
+      - name: Import Configuration
+        run: |
+          terminus drush ${PANTHEON_SITE_NAME}.dev -- config:import -y
+
+      - name: Rebuild Cache
+        run: |
+          terminus drush ${PANTHEON_SITE_NAME}.dev -- cache:rebuild -y
