@@ -72,7 +72,7 @@ jobs:
 
       - name: Run Database Updates
         run: |
-          terminus drush ${PANTHEON_SITE_NAME}.dev -- updatedb -y
+          terminus drush ${PANTHEON_SITE_NAME}.dev -- status -vvv
 
       - name: Import Configuration
         run: |
