@@ -38,6 +38,23 @@ jobs:
       - name: Install Composer Dependencies
         run: composer install --no-interaction --prefer-dist
 
+      - name: Verify Repository Contents
+        run: |
+          echo "Repository root:"
+          ls -la
+
+          echo ""
+          echo "Config directory:"
+          ls -la config
+
+          echo ""
+          echo "Vendor exists?"
+          test -d vendor && echo YES || echo NO
+
+          echo ""
+          echo "Web exists?"
+          test -d web && echo YES || echo NO
+
       - name: Configure Git
         run: |
           git config --global user.name "GitHub Actions"
