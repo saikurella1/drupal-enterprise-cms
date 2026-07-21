@@ -67,9 +67,29 @@ jobs:
         run: |
           git push --force-with-lease pantheon HEAD:master
 
+      - name: Show Commit
+        run: |
+          git rev-parse HEAD
+          git ls-tree -r HEAD --name-only | grep '^config/' | head -20
+
+      - name: Push Code to Pantheon
+        run: |
+          git push --force-with-lease pantheon HEAD:master
+
+      - name: Install Terminus
+        run: |
+          mkdir -p $HOME/bin
+          curl -L https://github.com/pantheon-systems/terminus/releases/latest/download/terminus.phar -o $HOME/bin/terminus
+          chmod +x $HOME/bin/terminus
+          echo "$HOME/bin" >> $GITHUB_PATH
+
+      - name: Authenticate Terminus
+        run: |
+          terminus auth:login --machine-token="${{ secrets.PANTHEON_MACHINE_TOKEN }}"
+
       - name: Wait for Pantheon Build
         run: |
-          echo "Waiting 3 minutes for Pantheon Integrated Composer build..."
+          echo "Waiting for Pantheon build..."
           sleep 180
 
       - name: Verify Running Commit
@@ -86,22 +106,6 @@ jobs:
             echo PHP_EOL;
             print_r(scandir('/code/config'));
           "
-
-      - name: Show Commit
-        run: |
-          git rev-parse HEAD
-          git ls-tree -r HEAD --name-only | grep '^config/' | head -20
-
-      - name: Install Terminus
-        run: |
-          mkdir -p $HOME/bin
-          curl -L https://github.com/pantheon-systems/terminus/releases/latest/download/terminus.phar -o $HOME/bin/terminus
-          chmod +x $HOME/bin/terminus
-          echo "$HOME/bin" >> $GITHUB_PATH
-
-      - name: Authenticate Terminus
-        run: |
-          terminus auth:login --machine-token="${{ secrets.PANTHEON_MACHINE_TOKEN }}"
 
       - name: Check Config Files In Pantheon Branches
         run: |
