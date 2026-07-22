@@ -38,10 +38,10 @@
         },
         "audit": {
             "ignore": [
-                "PKSA-fy2t-3c5f-827y",
-                "PKSA-qxvb-2bpp-dnk6",
-                "PKSA-bbs6-q5q9-f3t4",
-                "PKSA-pwsk-hy21-4gby"
+                "GHSA-h95v-h523-3mw8",
+                "GHSA-wm3w-8rrp-j577",
+                "GHSA-f283-ghqc-fg79",
+                "GHSA-94pj-82f3-465w"
             ]
         },
         "sort-packages": true
