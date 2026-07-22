@@ -43,7 +43,6 @@ jobs:
           mkdir -p ~/.ssh
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-
           ssh-keyscan -p 2222 codeserver.dev.${PANTHEON_SITE_ID}.drush.in >> ~/.ssh/known_hosts
 
       - name: Add Pantheon Remote
@@ -51,10 +50,10 @@ jobs:
           git remote remove pantheon || true
           git remote add pantheon ssh://codeserver.dev.${PANTHEON_SITE_ID}@codeserver.dev.${PANTHEON_SITE_ID}.drush.in:2222/~/repository.git
 
-      - name: Push to Pantheon
+      - name: Push to Pantheon Dev
         run: |
           git fetch pantheon
-          git push --force pantheon HEAD:main
+          git push --force pantheon HEAD:master
 
       - name: Install Terminus
         run: |
@@ -69,3 +68,4 @@ jobs:
 
       - name: Wait for Pantheon Build
         run: sleep 60
+         
