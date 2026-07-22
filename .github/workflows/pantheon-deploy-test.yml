@@ -5,16 +5,23 @@ on:
     branches:
       - release
 
+permissions:
+  contents: read
+
+concurrency:
+  group: pantheon-test
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     env:
       PANTHEON_SITE_ID: ${{ secrets.PANTHEON_SITE_ID }}
       PANTHEON_SITE_NAME: enterprise-drupal-cms
       COMPOSER_PROCESS_TIMEOUT: 0
       COMPOSER_NO_INTERACTION: 1
-      COMPOSER_NO_AUDIT: 1
 
     steps:
       - name: Checkout Repository
@@ -25,10 +32,13 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.3"
+          php-version: "8.2"
           tools: composer:v2
 
-      - name: Install Composer Dependencies
+      - name: Validate Composer
+        run: composer validate --no-check-publish
+
+      - name: Install Dependencies
         run: composer install --no-dev --prefer-dist --optimize-autoloader
 
       - name: Configure Git
@@ -43,18 +53,17 @@ jobs:
           mkdir -p ~/.ssh
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-
           ssh-keyscan -p 2222 codeserver.dev.${PANTHEON_SITE_ID}.drush.in >> ~/.ssh/known_hosts
 
-      - name: Add Pantheon Remote
+      - name: Configure Pantheon Remote
         run: |
           git remote remove pantheon || true
           git remote add pantheon ssh://codeserver.dev.${PANTHEON_SITE_ID}@codeserver.dev.${PANTHEON_SITE_ID}.drush.in:2222/~/repository.git
-
-      - name: Push to Pantheon
-        run: |
           git fetch pantheon
-          git push --force pantheon HEAD:main
+
+      - name: Push Code to Pantheon
+        run: |
+          git push --force-with-lease pantheon HEAD:main
 
       - name: Install Terminus
         run: |
@@ -69,3 +78,8 @@ jobs:
 
       - name: Wait for Pantheon Build
         run: sleep 60
+
+      - name: Show Workflow Status
+        run: |
+          echo "Deployment pushed successfully to Pantheon Test."
+          echo "Pantheon will now build and deploy the site."
