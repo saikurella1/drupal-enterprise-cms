@@ -912,4 +912,4 @@ else {
 
 }
 
-$settings['config_sync_directory'] = dirname(DRUPAL_ROOT) . '/config/sync';
+$settings['config_sync_directory'] = dirname(DRUPAL_ROOT) . '/config';
