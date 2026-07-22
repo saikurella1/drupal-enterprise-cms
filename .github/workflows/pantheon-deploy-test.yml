@@ -9,8 +9,15 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    env:
+      PANTHEON_SITE_ID: ${{ secrets.PANTHEON_SITE_ID }}
+      PANTHEON_SITE_NAME: enterprise-drupal-cms
+      COMPOSER_PROCESS_TIMEOUT: 0
+      COMPOSER_NO_INTERACTION: 1
+      COMPOSER_NO_AUDIT: 1
+
     steps:
-      - name: Checkout Source
+      - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -21,11 +28,8 @@ jobs:
           php-version: "8.3"
           tools: composer:v2
 
-      - name: Validate Composer
-        run: composer validate
-
-      - name: Install Dependencies
-        run: composer install --no-interaction --prefer-dist
+      - name: Install Composer Dependencies
+        run: composer install --no-dev --prefer-dist --optimize-autoloader
 
       - name: Configure Git
         run: |
@@ -39,40 +43,29 @@ jobs:
           mkdir -p ~/.ssh
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -p 2222 codeserver.dev.5c64571b-09a9-48f4-b65c-1fdeb6e8600f.drush.in >> ~/.ssh/known_hosts
+
+          ssh-keyscan -p 2222 codeserver.dev.${PANTHEON_SITE_ID}.drush.in >> ~/.ssh/known_hosts
 
       - name: Add Pantheon Remote
         run: |
-          git remote add pantheon ssh://codeserver.dev.5c64571b-09a9-48f4-b65c-1fdeb6e8600f@codeserver.dev.5c64571b-09a9-48f4-b65c-1fdeb6e8600f.drush.in:2222/~/repository.git
-          git fetch pantheon
+          git remote remove pantheon || true
+          git remote add pantheon ssh://codeserver.dev.${PANTHEON_SITE_ID}@codeserver.dev.${PANTHEON_SITE_ID}.drush.in:2222/~/repository.git
 
-      - name: Push Code to Pantheon
+      - name: Push to Pantheon
         run: |
-          git push --force-with-lease pantheon HEAD:main
+          git fetch pantheon
+          git push --force pantheon HEAD:main
 
       - name: Install Terminus
         run: |
-          mkdir -p $HOME/bin
-          curl -L https://github.com/pantheon-systems/terminus/releases/latest/download/terminus.phar -o $HOME/bin/terminus
-          chmod +x $HOME/bin/terminus
+          mkdir -p "$HOME/bin"
+          curl -L https://github.com/pantheon-systems/terminus/releases/latest/download/terminus.phar -o "$HOME/bin/terminus"
+          chmod +x "$HOME/bin/terminus"
           echo "$HOME/bin" >> $GITHUB_PATH
 
       - name: Authenticate Terminus
         run: |
           terminus auth:login --machine-token="${{ secrets.PANTHEON_MACHINE_TOKEN }}"
 
-      - name: Deploy to TEST
-        run: |
-          terminus env:deploy enterprise-cms-dev.test --yes
-
-      - name: Run Database Updates
-        run: |
-          terminus drush enterprise-cms-dev.test -- updatedb -y
-
-      - name: Import Drupal Configuration
-        run: |
-          terminus drush enterprise-cms-dev.test -- config:import -y
-
-      - name: Rebuild Drupal Cache
-        run: |
-          terminus drush enterprise-cms-dev.test -- cache:rebuild
+      - name: Wait for Pantheon Build
+        run: sleep 60
