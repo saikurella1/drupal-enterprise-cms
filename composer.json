@@ -36,6 +36,14 @@
             "dealerdirect/phpcodesniffer-composer-installer": true,
             "php-http/discovery": true
         },
+        "audit": {
+            "ignore": [
+                "PKSA-fy2t-3c5f-827y",
+                "PKSA-qxvb-2bpp-dnk6",
+                "PKSA-bbs6-q5q9-f3t4",
+                "PKSA-pwsk-hy21-4gby"
+            ]
+        },
         "sort-packages": true
     },
     "extra": {
