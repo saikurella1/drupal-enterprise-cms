@@ -41,7 +41,15 @@
                 "GHSA-h95v-h523-3mw8",
                 "GHSA-wm3w-8rrp-j577",
                 "GHSA-f283-ghqc-fg79",
-                "GHSA-94pj-82f3-465w"
+                "GHSA-94pj-82f3-465w",
+                "GHSA-mqr2-w7wj-jjgp",
+                "GHSA-vqh7-4grj-4cgg",
+                "GHSA-rmf8-2v88-f8xh",
+                "GHSA-w235-7p84-xx57",
+                "GHSA-q2m4-hfmj-hcq6",
+                "GHSA-q5qx-8xr6-4jcc",
+                "GHSA-wcwf-g35v-6wg2",
+                "GHSA-c2h3-6mxf-6v8j"
             ]
         },
         "sort-packages": true
