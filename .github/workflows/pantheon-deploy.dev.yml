@@ -11,7 +11,6 @@ jobs:
 
     env:
       PANTHEON_SITE_ID: ${{ secrets.PANTHEON_SITE_ID }}
-      PANTHEON_SITE_NAME: enterprise-drupal-cms
       COMPOSER_PROCESS_TIMEOUT: 0
       COMPOSER_NO_INTERACTION: 1
       COMPOSER_NO_AUDIT: 1
@@ -28,8 +27,36 @@ jobs:
           php-version: "8.2"
           tools: composer:v2
 
+      - name: Validate Composer
+        run: |
+          composer validate --no-check-publish
+
       - name: Install Composer Dependencies
-        run: composer install --no-dev --prefer-dist --optimize-autoloader
+        run: |
+          composer install \
+            --no-dev \
+            --prefer-dist \
+            --no-progress \
+            --optimize-autoloader
+
+      - name: Show Commit Information
+        run: |
+          echo "Current Branch:"
+          git branch --show-current
+
+          echo "Current Commit:"
+          git rev-parse HEAD
+
+          echo "Last Commit:"
+          git log --oneline -1
+
+      - name: Verify Working Tree
+        run: |
+          echo "Git Status:"
+          git status
+
+          echo "Diff for default.settings.php"
+          git diff -- web/sites/default/default.settings.php || true
 
       - name: Configure Git
         run: |
@@ -43,14 +70,20 @@ jobs:
           mkdir -p ~/.ssh
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
+
           ssh-keyscan -p 2222 codeserver.dev.${PANTHEON_SITE_ID}.drush.in >> ~/.ssh/known_hosts
 
       - name: Add Pantheon Remote
         run: |
           git remote remove pantheon || true
-          git remote add pantheon ssh://codeserver.dev.${PANTHEON_SITE_ID}@codeserver.dev.${PANTHEON_SITE_ID}.drush.in:2222/~/repository.git
+          git remote add pantheon \
+            ssh://codeserver.dev.${PANTHEON_SITE_ID}@codeserver.dev.${PANTHEON_SITE_ID}.drush.in:2222/~/repository.git
 
-      - name: Push to Pantheon Dev
+      - name: Show Pantheon Remote
+        run: |
+          git remote -v
+
+      - name: Push to Pantheon
         run: |
           git fetch pantheon
           git push --force pantheon HEAD:master
@@ -58,14 +91,23 @@ jobs:
       - name: Install Terminus
         run: |
           mkdir -p "$HOME/bin"
-          curl -L https://github.com/pantheon-systems/terminus/releases/latest/download/terminus.phar -o "$HOME/bin/terminus"
+
+          curl -L \
+            https://github.com/pantheon-systems/terminus/releases/latest/download/terminus.phar \
+            -o "$HOME/bin/terminus"
+
           chmod +x "$HOME/bin/terminus"
+
           echo "$HOME/bin" >> $GITHUB_PATH
 
       - name: Authenticate Terminus
         run: |
-          terminus auth:login --machine-token="${{ secrets.PANTHEON_MACHINE_TOKEN }}"
+          terminus auth:login \
+            --machine-token="${{ secrets.PANTHEON_MACHINE_TOKEN }}"
 
       - name: Wait for Pantheon Build
         run: sleep 60
-         
+
+      - name: Display Workflow Status
+        run: |
+          echo "Deployment completed."
