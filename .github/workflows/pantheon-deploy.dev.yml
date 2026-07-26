@@ -110,7 +110,7 @@ jobs:
 
       - name: Check Database Tables
         run: |
-          terminus remote:drush ${{ secrets.PANTHEON_SITE_NAME }}.dev -- sql:query "SHOW TABLES;"
+          terminus remote:drush ${{ secrets.PANTHEON_SITE_ID }}.dev -- sql:query "SHOW TABLES;"
 
       - name: Check Key Value Table
         run: |
