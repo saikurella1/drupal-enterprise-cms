@@ -56,28 +56,6 @@ jobs:
           echo "Git Status:"
           git status
 
-      - name: Prepare settings.php for Pantheon
-        run: |
-          # Ensure settings.php is NOT tracked in git
-          # Pantheon manages this file per environment
-          if git ls-files --error-unmatch web/sites/default/settings.php 2>/dev/null; then
-            echo "WARNING: settings.php is tracked in git — removing from index"
-            git rm --cached web/sites/default/settings.php
-            git commit -m "ci: remove settings.php from git tracking [skip ci]"
-          else
-            echo "OK: settings.php is not tracked in git"
-          fi
-
-          # Ensure default.settings.php exists (Pantheon needs it)
-          if [ ! -f web/sites/default/default.settings.php ]; then
-            echo "ERROR: default.settings.php is missing!"
-            exit 1
-          fi
-
-          # Ensure the sites/default/files directory exists
-          mkdir -p web/sites/default/files
-          touch web/sites/default/files/.gitkeep
-
       - name: Configure Git
         run: |
           git config --global user.name "GitHub Actions"
