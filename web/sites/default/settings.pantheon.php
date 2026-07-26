@@ -24,12 +24,48 @@ $settings['trusted_host_patterns'] = [
 /**
  * Reverse proxy / CDN settings for Pantheon's edge layer.
  */
+<?php
+
+/**
+ * @file
+ * Pantheon-specific configuration.
+ * This file is included by settings.php only when running on Pantheon.
+ */
+
+/**
+ * Database configuration.
+ * Pantheon injects DB credentials via environment variables automatically.
+ */
+if (isset($_ENV['PANTHEON_ENVIRONMENT'])) {
+  $databases['default']['default'] = [
+    'database'  => $_ENV['DB_NAME'],
+    'username'  => $_ENV['DB_USER'],
+    'password'  => $_ENV['DB_PASSWORD'],
+    'host'      => $_ENV['DB_HOST'],
+    'port'      => $_ENV['DB_PORT'],
+    'driver'    => 'mysql',
+    'prefix'    => '',
+    'collation' => 'utf8mb4_general_ci',
+  ];
+}
+
+/**
+ * Trusted host patterns for Pantheon environments.
+ */
+$settings['trusted_host_patterns'] = [
+  '^.+\.pantheonsite\.io$',
+  // Add your custom domain below if needed:
+  // '^www\.example\.com$',
+];
+
+/**
+ * Reverse proxy settings for Pantheon's edge layer.
+ */
 $settings['reverse_proxy'] = TRUE;
 $settings['reverse_proxy_addresses'] = [$_SERVER['REMOTE_ADDR']];
 
 /**
  * Disable CSS/JS aggregation on dev for easier debugging.
- * Remove or invert this for test/live environments.
  */
 if (isset($_ENV['PANTHEON_ENVIRONMENT']) && $_ENV['PANTHEON_ENVIRONMENT'] === 'dev') {
   $config['system.performance']['css']['preprocess'] = FALSE;
