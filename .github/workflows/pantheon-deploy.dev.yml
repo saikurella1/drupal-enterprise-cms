@@ -56,6 +56,12 @@ jobs:
           echo "Git Status:"
           git status
 
+      # Moved BEFORE Prepare settings.php so git commit works
+      - name: Configure Git
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "github-actions@github.com"
+
       - name: Prepare settings.php for Pantheon
         run: |
           # Ensure settings.php is NOT tracked in git
@@ -77,11 +83,6 @@ jobs:
           # Ensure the sites/default/files directory exists
           mkdir -p web/sites/default/files
           touch web/sites/default/files/.gitkeep
-
-      - name: Configure Git
-        run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "github-actions@github.com"
 
       - name: Configure SSH
         env:
@@ -131,75 +132,3 @@ jobs:
           terminus site:list --format=list
 
           echo "--- Attempting to resolve site ---"
-          terminus site:info ${PANTHEON_SITE_NAME} 2>&1 || echo "FAILED: Site '${PANTHEON_SITE_NAME}' not found"
-
-          echo "--- Listing environments if site resolves ---"
-          terminus env:list ${PANTHEON_SITE_NAME} 2>&1 || echo "FAILED: Could not list environments"
-
-      - name: Wait for Pantheon Build
-        run: |
-          echo "Waiting for Pantheon to sync code..."
-          sleep 60
-
-      - name: Validate Pantheon Site Access
-        run: |
-          echo "Validating site access..."
-          SITE_INFO=$(terminus site:info ${PANTHEON_SITE_NAME} --format=list 2>&1)
-
-          if echo "$SITE_INFO" | grep -q "not found\|Could not locate"; then
-            echo "ERROR: Cannot find site '${PANTHEON_SITE_NAME}'"
-            echo "--- Available sites ---"
-            terminus site:list --format=list
-            exit 1
-          fi
-
-          echo "Site found:"
-          echo "$SITE_INFO"
-
-      - name: Check if Drupal is Already Installed
-        id: drupal_status
-        run: |
-          STATUS=$(terminus remote:drush ${PANTHEON_SITE_NAME}.dev \
-            -- core:status --field=bootstrap 2>&1 || true)
-
-          echo "Bootstrap status: $STATUS"
-
-          if echo "$STATUS" | grep -qi "successful"; then
-            echo "drupal_installed=true" >> $GITHUB_OUTPUT
-            echo "Drupal is installed"
-          else
-            echo "drupal_installed=false" >> $GITHUB_OUTPUT
-            echo "⚠️ Drupal not installed — will run site:install"
-          fi
-
-      - name: Install Drupal (First Time Only)
-        if: steps.drupal_status.outputs.drupal_installed == 'false'
-        run: |
-          echo "Running site install..."
-          terminus remote:drush ${PANTHEON_SITE_NAME}.dev -- site:install standard \
-            --account-name="${{ secrets.DRUPAL_ADMIN_USER }}" \
-            --account-pass="${{ secrets.DRUPAL_ADMIN_PASS }}" \
-            --account-mail="${{ secrets.DRUPAL_ADMIN_EMAIL }}" \
-            --site-name="${{ secrets.DRUPAL_SITE_NAME }}" \
-            --yes
-
-      - name: Run Database Updates
-        if: steps.drupal_status.outputs.drupal_installed == 'true'
-        run: |
-          echo "Running database updates..."
-          terminus remote:drush ${PANTHEON_SITE_NAME}.dev -- updatedb --yes
-          terminus remote:drush ${PANTHEON_SITE_NAME}.dev -- cache:rebuild
-
-      - name: Verify Drupal Status
-        run: |
-          terminus remote:drush ${PANTHEON_SITE_NAME}.dev -- core:status
-
-      - name: Check Database Tables
-        run: |
-          terminus remote:drush ${PANTHEON_SITE_NAME}.dev -- sql:query "SHOW TABLES;"
-
-      - name: Display Workflow Status
-        run: |
-          echo "Deployment to Pantheon DEV completed successfully."
-          echo "Site: ${PANTHEON_SITE_NAME}.dev"
-          echo "Commit: $(git rev-parse HEAD)"
