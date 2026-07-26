@@ -7,7 +7,11 @@
 /web/modules/contrib/
 /web/themes/contrib/
 /web/profiles/contrib/
-/vendor/
+/drupal/vendor/
+
+# Drupal settings — managed per environment, never commit
+web/sites/default/settings.php
+web/sites/default/settings.local.php
 
 # Environment files
 .env
