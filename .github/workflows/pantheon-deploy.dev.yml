@@ -11,6 +11,7 @@ jobs:
 
     env:
       PANTHEON_SITE_ID: ${{ secrets.PANTHEON_SITE_ID }}
+      PANTHEON_SITE_NAME: ${{ secrets.PANTHEON_SITE_NAME }}
       COMPOSER_PROCESS_TIMEOUT: 0
       COMPOSER_NO_INTERACTION: 1
       COMPOSER_NO_AUDIT: 1
@@ -55,8 +56,27 @@ jobs:
           echo "Git Status:"
           git status
 
-          echo "Diff for default.settings.php"
-          git diff -- web/sites/default/default.settings.php || true
+      - name: Prepare settings.php for Pantheon
+        run: |
+          # Ensure settings.php is NOT tracked in git
+          # Pantheon manages this file per environment
+          if git ls-files --error-unmatch web/sites/default/settings.php 2>/dev/null; then
+            echo "WARNING: settings.php is tracked in git — removing from index"
+            git rm --cached web/sites/default/settings.php
+            git commit -m "ci: remove settings.php from git tracking [skip ci]"
+          else
+            echo "OK: settings.php is not tracked in git"
+          fi
+
+          # Ensure default.settings.php exists (Pantheon needs it)
+          if [ ! -f web/sites/default/default.settings.php ]; then
+            echo "ERROR: default.settings.php is missing!"
+            exit 1
+          fi
+
+          # Ensure the sites/default/files directory exists
+          mkdir -p web/sites/default/files
+          touch web/sites/default/files/.gitkeep
 
       - name: Configure Git
         run: |
@@ -105,27 +125,51 @@ jobs:
           terminus auth:login \
             --machine-token="${{ secrets.PANTHEON_MACHINE_TOKEN }}"
 
-      - name: Verify Drupal Files
-        run: |
-          ls -la
-          ls -la web
-          ls -la web/sites/default
-
       - name: Wait for Pantheon Build
-        run: sleep 60
+        run: |
+          echo "Waiting for Pantheon to sync code..."
+          sleep 60
+
+      - name: Check if Drupal is Already Installed
+        id: drupal_status
+        run: |
+          STATUS=$(terminus remote:drush ${PANTHEON_SITE_NAME}.dev -- core:status --field=bootstrap 2>&1 || true)
+          echo "Bootstrap status: $STATUS"
+
+          if echo "$STATUS" | grep -q "Successful"; then
+            echo "drupal_installed=true" >> $GITHUB_OUTPUT
+          else
+            echo "drupal_installed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Install Drupal (First Time Only)
+        if: steps.drupal_status.outputs.drupal_installed == 'false'
+        run: |
+          echo "Drupal not installed — running site install..."
+          terminus remote:drush ${PANTHEON_SITE_NAME}.dev -- site:install standard \
+            --account-name="${{ secrets.DRUPAL_ADMIN_USER }}" \
+            --account-pass="${{ secrets.DRUPAL_ADMIN_PASS }}" \
+            --account-mail="${{ secrets.DRUPAL_ADMIN_EMAIL }}" \
+            --site-name="${{ secrets.DRUPAL_SITE_NAME }}" \
+            --yes
+
+      - name: Run Database Updates
+        if: steps.drupal_status.outputs.drupal_installed == 'true'
+        run: |
+          echo "Drupal already installed — running updates..."
+          terminus remote:drush ${PANTHEON_SITE_NAME}.dev -- updatedb --yes
+          terminus remote:drush ${PANTHEON_SITE_NAME}.dev -- cache:rebuild
+
+      - name: Verify Drupal Status
+        run: |
+          terminus remote:drush ${PANTHEON_SITE_NAME}.dev -- core:status
 
       - name: Check Database Tables
         run: |
-          terminus remote:drush ${{ secrets.PANTHEON_SITE_ID }}.dev -- sql:query "SHOW TABLES;"
-
-      - name: Check Key Value Table
-        run: |
-          terminus remote:drush enterprise-drupal-cms.dev -- sql:query "SELECT COUNT(*) FROM key_value;"
-
-      - name: Verify Drupal
-        run: |
-          terminus remote:drush enterprise-drupal-cms.dev -- core:status
+          terminus remote:drush ${PANTHEON_SITE_NAME}.dev -- sql:query "SHOW TABLES;"
 
       - name: Display Workflow Status
         run: |
-          echo "Deployment completed."
+          echo "✅ Deployment to Pantheon DEV completed successfully."
+          echo "Site: ${PANTHEON_SITE_NAME}.dev"
+          echo "Commit: $(git rev-parse HEAD)"
