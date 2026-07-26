@@ -167,17 +167,6 @@ jobs:
             echo "⚠️ Drupal not installed — will run site:install"
           fi
 
-      - name: Install Drupal (First Time Only)
-        if: steps.drupal_status.outputs.drupal_installed == 'false'
-        run: |
-          echo "Running site install..."
-          terminus remote:drush ${PANTHEON_SITE_NAME}.dev -- site:install standard \
-            --account-name="${{ secrets.DRUPAL_ADMIN_USER }}" \
-            --account-pass="${{ secrets.DRUPAL_ADMIN_PASS }}" \
-            --account-mail="${{ secrets.DRUPAL_ADMIN_EMAIL }}" \
-            --site-name="${{ secrets.DRUPAL_SITE_NAME }}" \
-            --yes
-
       - name: Run Database Updates
         if: steps.drupal_status.outputs.drupal_installed == 'true'
         run: |

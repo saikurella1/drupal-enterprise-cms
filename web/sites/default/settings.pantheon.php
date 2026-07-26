@@ -24,7 +24,6 @@ $settings['trusted_host_patterns'] = [
 /**
  * Reverse proxy / CDN settings for Pantheon's edge layer.
  */
-<?php
 
 /**
  * @file
