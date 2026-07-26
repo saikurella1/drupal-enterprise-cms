@@ -10,7 +10,6 @@
 /drupal/vendor/
 
 # Drupal settings — managed per environment, never commit
-web/sites/default/settings.php
 web/sites/default/settings.local.php
 
 # Environment files
