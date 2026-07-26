@@ -19,9 +19,10 @@ jobs:
 
     env:
       PANTHEON_SITE_ID: ${{ secrets.PANTHEON_SITE_ID }}
-      PANTHEON_SITE_NAME: enterprise-drupal-cms
+      PANTHEON_SITE_NAME: ${{ secrets.PANTHEON_SITE_NAME }}
       COMPOSER_PROCESS_TIMEOUT: 0
       COMPOSER_NO_INTERACTION: 1
+      COMPOSER_NO_AUDIT: 1
 
     steps:
       - name: Checkout Repository
@@ -39,7 +40,42 @@ jobs:
         run: composer validate --no-check-publish
 
       - name: Install Dependencies
-        run: composer install --no-dev --prefer-dist --optimize-autoloader
+        run: |
+          composer install \
+            --no-dev \
+            --prefer-dist \
+            --no-progress \
+            --optimize-autoloader
+
+      - name: Show Commit Information
+        run: |
+          echo "Branch: $(git branch --show-current)"
+          echo "Commit: $(git rev-parse HEAD)"
+          echo "Last commit: $(git log --oneline -1)"
+
+      - name: Verify Required Files
+        run: |
+          if [ ! -f web/sites/default/settings.php ]; then
+            echo "ERROR: settings.php is missing!"
+            exit 1
+          else
+            echo "settings.php is present"
+          fi
+
+          if [ ! -f web/sites/default/settings.pantheon.php ]; then
+            echo "ERROR: settings.pantheon.php is missing!"
+            exit 1
+          else
+            echo "settings.pantheon.php is present"
+          fi
+
+          if [ ! -f pantheon.yml ]; then
+            echo "ERROR: pantheon.yml is missing!"
+            exit 1
+          else
+            echo "pantheon.yml is present"
+            cat pantheon.yml
+          fi
 
       - name: Configure Git
         run: |
@@ -53,33 +89,89 @@ jobs:
           mkdir -p ~/.ssh
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -p 2222 codeserver.dev.${PANTHEON_SITE_ID}.drush.in >> ~/.ssh/known_hosts
+
+          # TEST environment uses codeserver.test not codeserver.dev
+          ssh-keyscan -p 2222 codeserver.test.${PANTHEON_SITE_ID}.drush.in >> ~/.ssh/known_hosts
 
       - name: Configure Pantheon Remote
         run: |
           git remote remove pantheon || true
-          git remote add pantheon ssh://codeserver.dev.${PANTHEON_SITE_ID}@codeserver.dev.${PANTHEON_SITE_ID}.drush.in:2222/~/repository.git
+
+          # TEST environment remote — must use codeserver.test
+          git remote add pantheon \
+            ssh://codeserver.test.${PANTHEON_SITE_ID}@codeserver.test.${PANTHEON_SITE_ID}.drush.in:2222/~/repository.git
+
+          git remote -v
           git fetch pantheon
 
-      - name: Push Code to Pantheon
+      - name: Push Code to Pantheon TEST
         run: |
-          git push --force-with-lease pantheon HEAD:main
+          # Use --force not --force-with-lease for reliable CI pushes
+          git push --force pantheon HEAD:main
 
       - name: Install Terminus
         run: |
           mkdir -p "$HOME/bin"
-          curl -L https://github.com/pantheon-systems/terminus/releases/latest/download/terminus.phar -o "$HOME/bin/terminus"
+          curl -L \
+            https://github.com/pantheon-systems/terminus/releases/latest/download/terminus.phar \
+            -o "$HOME/bin/terminus"
           chmod +x "$HOME/bin/terminus"
           echo "$HOME/bin" >> $GITHUB_PATH
 
       - name: Authenticate Terminus
         run: |
-          terminus auth:login --machine-token="${{ secrets.PANTHEON_MACHINE_TOKEN }}"
+          terminus auth:login \
+            --machine-token="${{ secrets.PANTHEON_MACHINE_TOKEN }}"
 
-      - name: Wait for Pantheon Build
-        run: sleep 60
-
-      - name: Show Workflow Status
+      - name: Wait for Pantheon Code Sync
         run: |
-          echo "Deployment pushed successfully to Pantheon Test."
-          echo "Pantheon will now build and deploy the site."
+          echo "Waiting for Pantheon to sync code..."
+          sleep 60
+
+      - name: Check Drupal Bootstrap on TEST
+        id: drupal_status
+        run: |
+          STATUS=$(terminus remote:drush ${PANTHEON_SITE_NAME}.test \
+            -- core:status --field=bootstrap 2>&1 || true)
+
+          echo "Bootstrap status: $STATUS"
+
+          if echo "$STATUS" | grep -qi "successful"; then
+            echo "drupal_installed=true" >> $GITHUB_OUTPUT
+            echo "Drupal is bootstrapping on TEST"
+          else
+            echo "drupal_installed=false" >> $GITHUB_OUTPUT
+            echo "⚠️ Drupal not bootstrapping — will clone DB from DEV"
+          fi
+
+      # Clone DB from DEV to TEST instead of site:install
+      # This works in Git mode and uses your existing imported data
+      - name: Clone Database from DEV to TEST
+        if: steps.drupal_status.outputs.drupal_installed == 'false'
+        run: |
+          echo "Cloning database from DEV to TEST..."
+          terminus env:clone-content ${PANTHEON_SITE_NAME}.dev test \
+            --db-only \
+            --yes
+          echo "Database cloned from DEV to TEST"
+          sleep 20
+
+      - name: Run Database Updates
+        run: |
+          echo "Running database updates on TEST..."
+          terminus remote:drush ${PANTHEON_SITE_NAME}.test -- updatedb --yes
+
+      - name: Rebuild Cache
+        run: |
+          terminus remote:drush ${PANTHEON_SITE_NAME}.test -- cache:rebuild
+          echo "Cache rebuilt"
+
+      - name: Verify Drupal Status
+        run: |
+          terminus remote:drush ${PANTHEON_SITE_NAME}.test -- core:status
+
+      - name: Display Workflow Status
+        run: |
+          echo "Deployment to Pantheon TEST completed successfully."
+          echo "Site: ${PANTHEON_SITE_NAME}.test"
+          echo "Commit: $(git rev-parse HEAD)"
