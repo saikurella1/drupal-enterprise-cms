@@ -108,6 +108,18 @@ jobs:
       - name: Wait for Pantheon Build
         run: sleep 60
 
+      - name: Check Database Tables
+        run: |
+          terminus remote:drush ${{ secrets.PANTHEON_SITE_NAME }}.dev -- sql:query "SHOW TABLES;"
+
+      - name: Check Key Value Table
+        run: |
+          terminus remote:drush enterprise-drupal-cms.dev -- sql:query "SELECT COUNT(*) FROM key_value;"
+
+      - name: Verify Drupal
+        run: |
+          terminus remote:drush enterprise-drupal-cms.dev -- core:status
+
       - name: Display Workflow Status
         run: |
           echo "Deployment completed."
