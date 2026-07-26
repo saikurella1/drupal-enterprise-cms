@@ -105,6 +105,12 @@ jobs:
           terminus auth:login \
             --machine-token="${{ secrets.PANTHEON_MACHINE_TOKEN }}"
 
+      - name: Verify Drupal Files
+        run: |
+          ls -la
+          ls -la web
+          ls -la web/sites/default
+
       - name: Wait for Pantheon Build
         run: sleep 60
 
