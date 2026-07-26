@@ -897,6 +897,13 @@ $settings['migrate_node_migrate_type_classic'] = FALSE;
  * Load environment-specific settings.
  */
 
+// phpcs:ignoreFile
+
+/**
+ * @file
+ * Drupal site-specific configuration file.
+ */
+
 $databases = [];
 
 $settings['hash_salt'] = 'wQSU_B27HxprpgWLWVEIew8z1DPqud_7SSFDbs0PW4VtxhDKa_Z84qvHWg9PltWzag8SWuq82g';
@@ -919,21 +926,22 @@ $settings['state_cache'] = TRUE;
 $settings['migrate_node_migrate_type_classic'] = FALSE;
 
 /**
- * Config sync directory.
+ * Config sync directory — set once here, used by all environments.
  */
 $settings['config_sync_directory'] = dirname(DRUPAL_ROOT) . '/config';
 
 /**
  * Load environment-specific settings.
+ *
+ * On Pantheon → loads settings.pantheon.php (DB credentials, trusted hosts)
+ * Locally     → loads settings.local.php (local DB overrides, debug config)
  */
 if (defined('PANTHEON_ENVIRONMENT')) {
-  // Pantheon: loads DB credentials and environment config automatically.
   if (file_exists($app_root . '/' . $site_path . '/settings.pantheon.php')) {
     include $app_root . '/' . $site_path . '/settings.pantheon.php';
   }
 }
 else {
-  // Local development.
   if (file_exists($app_root . '/' . $site_path . '/settings.local.php')) {
     include $app_root . '/' . $site_path . '/settings.local.php';
   }
