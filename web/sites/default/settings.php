@@ -897,19 +897,46 @@ $settings['migrate_node_migrate_type_classic'] = FALSE;
  * Load environment-specific settings.
  */
 
-if (defined('PANTHEON_ENVIRONMENT')) {
+$databases = [];
 
+$settings['hash_salt'] = 'wQSU_B27HxprpgWLWVEIew8z1DPqud_7SSFDbs0PW4VtxhDKa_Z84qvHWg9PltWzag8SWuq82g';
+
+$settings['update_free_access'] = FALSE;
+
+$settings['container_yamls'][] = $app_root . '/' . $site_path . '/services.yml';
+
+$settings['file_scan_ignore_directories'] = [
+  'node_modules',
+  'bower_components',
+];
+
+$settings['entity_update_batch_size'] = 50;
+
+$settings['entity_update_backup'] = TRUE;
+
+$settings['state_cache'] = TRUE;
+
+$settings['migrate_node_migrate_type_classic'] = FALSE;
+
+/**
+ * Config sync directory.
+ */
+$settings['config_sync_directory'] = dirname(DRUPAL_ROOT) . '/config';
+
+/**
+ * Load environment-specific settings.
+ */
+if (defined('PANTHEON_ENVIRONMENT')) {
+  // Pantheon: loads DB credentials and environment config automatically.
   if (file_exists($app_root . '/' . $site_path . '/settings.pantheon.php')) {
     include $app_root . '/' . $site_path . '/settings.pantheon.php';
   }
-
 }
 else {
-
+  // Local development.
   if (file_exists($app_root . '/' . $site_path . '/settings.local.php')) {
     include $app_root . '/' . $site_path . '/settings.local.php';
   }
-
 }
 
 $settings['config_sync_directory'] = dirname(DRUPAL_ROOT) . '/config';
