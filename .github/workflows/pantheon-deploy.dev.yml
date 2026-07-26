@@ -56,6 +56,28 @@ jobs:
           echo "Git Status:"
           git status
 
+      - name: Prepare settings.php for Pantheon
+        run: |
+          # Ensure settings.php is NOT tracked in git
+          # Pantheon manages this file per environment
+          if git ls-files --error-unmatch web/sites/default/settings.php 2>/dev/null; then
+            echo "WARNING: settings.php is tracked in git — removing from index"
+            git rm --cached web/sites/default/settings.php
+            git commit -m "ci: remove settings.php from git tracking [skip ci]"
+          else
+            echo "OK: settings.php is not tracked in git"
+          fi
+
+          # Ensure default.settings.php exists (Pantheon needs it)
+          if [ ! -f web/sites/default/default.settings.php ]; then
+            echo "ERROR: default.settings.php is missing!"
+            exit 1
+          fi
+
+          # Ensure the sites/default/files directory exists
+          mkdir -p web/sites/default/files
+          touch web/sites/default/files/.gitkeep
+
       - name: Configure Git
         run: |
           git config --global user.name "GitHub Actions"
@@ -103,27 +125,57 @@ jobs:
           terminus auth:login \
             --machine-token="${{ secrets.PANTHEON_MACHINE_TOKEN }}"
 
+      - name: Debug Terminus Site Access
+        run: |
+          echo "--- Listing all sites this token can access ---"
+          terminus site:list --format=list
+
+          echo "--- Attempting to resolve site ---"
+          terminus site:info ${PANTHEON_SITE_NAME} 2>&1 || echo "FAILED: Site '${PANTHEON_SITE_NAME}' not found"
+
+          echo "--- Listing environments if site resolves ---"
+          terminus env:list ${PANTHEON_SITE_NAME} 2>&1 || echo "FAILED: Could not list environments"
+
       - name: Wait for Pantheon Build
         run: |
           echo "Waiting for Pantheon to sync code..."
           sleep 60
 
+      - name: Validate Pantheon Site Access
+        run: |
+          echo "Validating site access..."
+          SITE_INFO=$(terminus site:info ${PANTHEON_SITE_NAME} --format=list 2>&1)
+
+          if echo "$SITE_INFO" | grep -q "not found\|Could not locate"; then
+            echo "ERROR: Cannot find site '${PANTHEON_SITE_NAME}'"
+            echo "--- Available sites ---"
+            terminus site:list --format=list
+            exit 1
+          fi
+
+          echo "Site found:"
+          echo "$SITE_INFO"
+
       - name: Check if Drupal is Already Installed
         id: drupal_status
         run: |
-          STATUS=$(terminus remote:drush ${PANTHEON_SITE_NAME}.dev -- core:status --field=bootstrap 2>&1 || true)
+          STATUS=$(terminus remote:drush ${PANTHEON_SITE_NAME}.dev \
+            -- core:status --field=bootstrap 2>&1 || true)
+
           echo "Bootstrap status: $STATUS"
 
-          if echo "$STATUS" | grep -q "Successful"; then
+          if echo "$STATUS" | grep -qi "successful"; then
             echo "drupal_installed=true" >> $GITHUB_OUTPUT
+            echo "Drupal is installed"
           else
             echo "drupal_installed=false" >> $GITHUB_OUTPUT
+            echo "⚠️ Drupal not installed — will run site:install"
           fi
 
       - name: Install Drupal (First Time Only)
         if: steps.drupal_status.outputs.drupal_installed == 'false'
         run: |
-          echo "Drupal not installed — running site install..."
+          echo "Running site install..."
           terminus remote:drush ${PANTHEON_SITE_NAME}.dev -- site:install standard \
             --account-name="${{ secrets.DRUPAL_ADMIN_USER }}" \
             --account-pass="${{ secrets.DRUPAL_ADMIN_PASS }}" \
@@ -134,7 +186,7 @@ jobs:
       - name: Run Database Updates
         if: steps.drupal_status.outputs.drupal_installed == 'true'
         run: |
-          echo "Drupal already installed — running updates..."
+          echo "Running database updates..."
           terminus remote:drush ${PANTHEON_SITE_NAME}.dev -- updatedb --yes
           terminus remote:drush ${PANTHEON_SITE_NAME}.dev -- cache:rebuild
 
@@ -148,6 +200,6 @@ jobs:
 
       - name: Display Workflow Status
         run: |
-          echo "✅ Deployment to Pantheon DEV completed successfully."
+          echo "Deployment to Pantheon DEV completed successfully."
           echo "Site: ${PANTHEON_SITE_NAME}.dev"
           echo "Commit: $(git rev-parse HEAD)"
