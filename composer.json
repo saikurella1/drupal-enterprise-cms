@@ -15,7 +15,7 @@
         }
     ],
     "require": {
-        "composer/installers": "^2.0",
+        "composer/installers": "^2.3",
         "drupal/admin_toolbar": "^3.6",
         "drupal/core-composer-scaffold": "^10.5",
         "drupal/core-project-message": "^10.5",
@@ -35,14 +35,6 @@
             "phpstan/extension-installer": true,
             "dealerdirect/phpcodesniffer-composer-installer": true,
             "php-http/discovery": true
-        },
-        "audit": {
-            "ignore": [
-                "GHSA-h95v-h523-3mw8",
-                "GHSA-wm3w-8rrp-j577",
-                "GHSA-f283-ghqc-fg79",
-                "GHSA-94pj-82f3-465w"
-            ]
         },
         "sort-packages": true
     },
