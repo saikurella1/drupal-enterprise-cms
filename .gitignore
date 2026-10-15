@@ -3,6 +3,14 @@
 
 # Drupal files
 /web/sites/default/files/
+/web/core/
+/web/modules/contrib/
+/web/themes/contrib/
+/web/profiles/contrib/
+/drupal/vendor/
+
+# Drupal settings — managed per environment, never commit
+web/sites/default/settings.local.php
 
 # Environment files
 .env

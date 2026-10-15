@@ -1,0 +1,139 @@
+name: Deploy to Pantheon DEV
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      PANTHEON_SITE_ID: ${{ secrets.PANTHEON_SITE_ID }}
+      PANTHEON_SITE_NAME: ${{ secrets.PANTHEON_SITE_NAME }}
+      COMPOSER_PROCESS_TIMEOUT: 0
+      COMPOSER_NO_INTERACTION: 1
+      COMPOSER_NO_AUDIT: 1
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          tools: composer:v2
+
+      - name: Validate Composer
+        run: |
+          composer validate --no-check-publish
+
+      - name: Install Composer Dependencies
+        run: |
+          composer install \
+            --no-dev \
+            --prefer-dist \
+            --no-progress \
+            --optimize-autoloader
+
+      - name: Show Commit Information
+        run: |
+          echo "Current Branch:"
+          git branch --show-current
+
+          echo "Current Commit:"
+          git rev-parse HEAD
+
+          echo "Last Commit:"
+          git log --oneline -1
+
+      - name: Verify Working Tree
+        run: |
+          echo "Git Status:"
+          git status
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "github-actions@github.com"
+
+      - name: Verify settings.php exists
+        run: |
+          if [ ! -f web/sites/default/settings.php ]; then
+            echo "ERROR: settings.php is missing from repo!"
+            exit 1
+          else
+            echo "settings.php is present"
+          fi
+
+          if [ ! -f web/sites/default/default.settings.php ]; then
+            echo "ERROR: default.settings.php is missing!"
+            exit 1
+          else
+            echo "✅ default.settings.php is present"
+          fi
+
+          mkdir -p web/sites/default/files
+          touch web/sites/default/files/.gitkeep
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.PANTHEON_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+          ssh-keyscan -p 2222 codeserver.dev.${PANTHEON_SITE_ID}.drush.in >> ~/.ssh/known_hosts
+
+      - name: Add Pantheon Remote
+        run: |
+          git remote remove pantheon || true
+          git remote add pantheon \
+            ssh://codeserver.dev.${PANTHEON_SITE_ID}@codeserver.dev.${PANTHEON_SITE_ID}.drush.in:2222/~/repository.git
+
+      - name: Show Pantheon Remote
+        run: |
+          git remote -v
+
+      - name: Push to Pantheon
+        run: |
+          git fetch pantheon
+          git push --force pantheon HEAD:master
+
+      - name: Install Terminus
+        run: |
+          mkdir -p "$HOME/bin"
+
+          curl -L \
+            https://github.com/pantheon-systems/terminus/releases/latest/download/terminus.phar \
+            -o "$HOME/bin/terminus"
+
+          chmod +x "$HOME/bin/terminus"
+
+          echo "$HOME/bin" >> $GITHUB_PATH
+
+      - name: Authenticate Terminus
+        run: |
+          terminus auth:login \
+            --machine-token="${{ secrets.PANTHEON_MACHINE_TOKEN }}"
+
+      - name: Debug Terminus Site Access
+        run: |
+          echo "--- Listing all sites this token can access ---"
+          terminus site:list --format=list
+
+          echo "--- Attempting to resolve site ---"
+          terminus site:info ${PANTHEON_SITE_NAME} 2>&1 || echo "FAILED: Site not found"
+
+          echo "--- Listing environments ---"
+          terminus env:list ${PANTHEON_SITE_NAME} 2>&1 || echo "FAILED: Could not list environments"
+
+      - name: Wait for Pantheon Build
+        run: |
+          echo "Waiting for Pantheon to sync code..."
+          sleep 60
